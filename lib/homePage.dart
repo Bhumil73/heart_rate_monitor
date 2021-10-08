@@ -61,7 +61,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
         child: Column(
           children: <Widget>[
             Expanded(
-              flex: 1,
+              flex: 2,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -95,9 +95,12 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
                       )
                     : Transform.scale(
                         scale: toggled ? _iconScale : 0,
-                        child: ClipPath(
-                          clipper: HeartClipper(),
-                          child: CameraPreview(_controller),
+                        child: AspectRatio(
+                          aspectRatio: 0.8,
+                          child: ClipPath(
+                            clipper: HeartClipper(),
+                            child: CameraPreview(_controller),
+                          ),
                         ),
                       ),
               ),
@@ -106,7 +109,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
               height: 100,
             ),
             Expanded(
-              flex: 1,
+              flex: 2,
               child: Column(
                 children: [
                   if (toggled)
@@ -137,7 +140,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
               ),
             ),
             Expanded(
-              flex: 2,
+              flex: 3,
               child: Container(
                 margin: EdgeInsets.all(12),
                 decoration: BoxDecoration(
