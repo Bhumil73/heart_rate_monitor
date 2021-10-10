@@ -90,13 +90,12 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
               child: Center(
                 child: !toggled
                     ? Container(
-                        child:
-                            Text("Click on Start to monitor your heart rate"),
+                        child: Text("Click on Start to monitor your heart rate"),
                       )
-                    : Transform.scale(
-                        scale: toggled ? _iconScale : 0,
-                        child: AspectRatio(
-                          aspectRatio: 0.8,
+                    : AspectRatio(
+                        aspectRatio: 0.9,
+                        child: Transform.scale(
+                          scale: toggled ? _iconScale : 0,
                           child: ClipPath(
                             clipper: HeartClipper(),
                             child: CameraPreview(_controller),
