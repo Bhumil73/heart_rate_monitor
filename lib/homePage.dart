@@ -215,7 +215,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
 
   void _initTimer() {
     _timer = Timer.periodic(Duration(milliseconds: 1000 ~/ _fs), (timer) {
-      if (toggled) {
+      if (toggled && _image != null) {
         _scanImage(_image!);
       } else {
         timer.cancel();
@@ -225,15 +225,24 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
 
   void _scanImage(CameraImage image) {
     _now = DateTime.now();
-    _avg =
-        image.planes.first.bytes.reduce((value, element) => value + element) /
-            image.planes.first.bytes.length;
+    _avg = image.planes.first.bytes.reduce((value, element) => value + element) / image.planes.first.bytes.length;
     if (_data.length >= _windowLen) {
       _data.removeAt(0);
     }
     setState(() {
       _data.add(SensorValue(_now, 255 - _avg));
     });
+
+    // Check if there's a sudden drop in avg, (in under .5 sec)
+    // it means finger removed from cam; then untoggle
+    int consideringSamplesCount = _fs ~/ 2;
+    if (_data.length > consideringSamplesCount) {
+      var slope = (_avg - _data.elementAt(_data.length - consideringSamplesCount).value) / consideringSamplesCount;
+      if (slope > 3) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Finger moved away from camera!")));
+        unToggle();
+      }
+    }
   }
 
   void _updateBPM() async {
