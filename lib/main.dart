@@ -9,7 +9,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'PPG',
+      title: 'Heart Rate Monitor',
       theme: ThemeData(
         brightness: Brightness.light,
       ),

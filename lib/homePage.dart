@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:wakelock/wakelock.dart';
@@ -89,8 +88,17 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
               flex: 2,
               child: Center(
                 child: !toggled
-                    ? Container(
-                        child: Text("Click on Start to monitor your heart rate"),
+                    ? AspectRatio(
+                        aspectRatio: 0.9,
+                        child: Transform.scale(
+                          scale: !toggled ? _iconScale : 0,
+                          child: ClipPath(
+                            clipper: HeartClipper(),
+                            child: Container(
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
                       )
                     : AspectRatio(
                         aspectRatio: 0.9,
@@ -111,28 +119,39 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
               flex: 2,
               child: Column(
                 children: [
-                  if (toggled)
-                    Text(
-                        "Cover both the camera and the flash with your finger",style: TextStyle(fontSize: 15),),
-                  SizedBox(height: 10,),
+                  Text(
+                    toggled
+                        ? "Cover both the camera and the flash with your finger\nHold for 30 Seconds"
+                        : "Click on Start to monitor your heart rate",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 15),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      TextButton(
-                        onPressed: () {
-                          if (toggled) {
-                            unToggle();
-                          } else {
+                      if (!toggled)
+                        TextButton(
+                          onPressed: () {
                             toggle();
-                          }
-                        },
-                        child: Container(
-                          padding: EdgeInsets.fromLTRB(15, 10, 15, 10),
-                          decoration: BoxDecoration(color: Colors.red,borderRadius: BorderRadius.circular(10)),
-                          child: Text(toggled ? 'Stop' : 'Start',style: TextStyle(fontSize: 18,color: Colors.white),),
+                            Future.delayed(Duration(seconds: 30))
+                                .then((value) => unToggle());
+                          },
+                          child: Container(
+                            padding: EdgeInsets.fromLTRB(15, 10, 15, 10),
+                            decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Text(
+                              'Start',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.white),
+                            ),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ],
@@ -224,7 +243,9 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
 
   void _scanImage(CameraImage image) {
     _now = DateTime.now();
-    _avg = image.planes.first.bytes.reduce((value, element) => value + element) / image.planes.first.bytes.length;
+    _avg =
+        image.planes.first.bytes.reduce((value, element) => value + element) /
+            image.planes.first.bytes.length;
     if (_data.length >= _windowLen) {
       _data.removeAt(0);
     }
@@ -233,12 +254,15 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
     });
 
     // Check if there's a sudden drop in avg, (in under .5 sec)
-    // it means finger removed from cam; then untoggle
+    // it means finger removed from cam; then unToggle
     int consideringSamplesCount = _fs ~/ 2;
     if (_data.length > consideringSamplesCount) {
-      var slope = (_avg - _data.elementAt(_data.length - consideringSamplesCount).value) / consideringSamplesCount;
+      var slope = (_avg -
+              _data.elementAt(_data.length - consideringSamplesCount).value) /
+          consideringSamplesCount;
       if (slope > 3) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Finger moved away from camera!")));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Finger moved away from camera!")));
         unToggle();
       }
     }
