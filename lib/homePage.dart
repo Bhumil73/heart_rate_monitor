@@ -22,11 +22,15 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
   int _bpm = 0; // beats per minute
   int _fs = 30; // sampling frequency (fps)
   int _windowLen = 30 * 6; // window length to display - 6 seconds
-  late CameraImage? _image; // store the last camera image
+  CameraImage? _image; // store the last camera image
   late double _avg; // store the average value during calculation
   late DateTime _now; // store the now Datetime
   late Timer _timer; // time
+  late Timer _countdown;
   late List cameras; // r for image processing
+
+  static const int timerSecondsComplete = 30;
+  int timerSeconds = timerSecondsComplete; //Timer value
 
   @override
   void initState() {
@@ -85,35 +89,73 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
               ),
             ),
             Expanded(
-              flex: 2,
-              child: Center(
-                child: !toggled
-                    ? AspectRatio(
-                        aspectRatio: 0.9,
-                        child: Transform.scale(
-                          scale: !toggled ? _iconScale : 0,
-                          child: ClipPath(
-                            clipper: HeartClipper(),
-                            child: Container(
-                              color: Colors.red,
-                            ),
-                          ),
-                        ),
-                      )
-                    : AspectRatio(
-                        aspectRatio: 0.9,
-                        child: Transform.scale(
-                          scale: toggled ? _iconScale : 0,
-                          child: ClipPath(
-                            clipper: HeartClipper(),
-                            child: CameraPreview(_controller),
-                          ),
-                        ),
+              flex: 3,
+              child: Stack(
+                children: [
+                  Center(
+                    child: AspectRatio(
+                      aspectRatio: 1.0,
+                      child: CircularProgressIndicator(
+                        color: Colors.red,
+                        backgroundColor: Colors.grey.shade300,
+                        semanticsValue: "Timer",
+                        strokeWidth: 10,
+                        value: ((timerSecondsComplete-timerSeconds).toDouble() /
+                            timerSecondsComplete.toDouble()),
                       ),
+                    ),
+                  ),
+                  Container(
+                    //color: Colors.orange,
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).size.height * 0.3*0.15),
+                    child: Center(
+                      child: !toggled
+                          ? InkWell(
+                              onTap: () {
+                                toggle();
+                                startTimer();
+                              },
+                              child: Center(
+                                child: AspectRatio(
+                                  aspectRatio: 0.9,
+                                  child: Transform.scale(
+                                    scale: !toggled ? _iconScale : 0,
+                                    child: ClipPath(
+                                      clipper: HeartClipper(),
+                                      child: Container(
+                                        color: Colors.red,
+                                        padding: EdgeInsets.only(top: 30),
+                                        child: Center(
+                                          child: Text(
+                                            "Start",
+                                            style: TextStyle(color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : AspectRatio(
+                              aspectRatio: 0.9,
+                              child: Transform.scale(
+                                scale: toggled ? _iconScale : 0,
+                                child: ClipPath(
+                                  clipper: HeartClipper(),
+                                  child: CameraPreview(_controller),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+
+                ],
               ),
             ),
             SizedBox(
-              height: 100,
+              height: 50,
             ),
             Expanded(
               flex: 2,
@@ -121,38 +163,21 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
                 children: [
                   Text(
                     toggled
-                        ? "Cover both the camera and the flash with your finger\nHold for 30 Seconds"
+                        ? "Cover both the camera and the flash with your finger"
                         : "Click on Start to monitor your heart rate",
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15),
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
                   ),
+                  if (toggled)
+                    Text(
+                      "Hold for 30 Seconds",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.red),
+                    ),
                   SizedBox(
                     height: 10,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!toggled)
-                        TextButton(
-                          onPressed: () {
-                            toggle();
-                            Future.delayed(Duration(seconds: 30))
-                                .then((value) => unToggle());
-                          },
-                          child: Container(
-                            padding: EdgeInsets.fromLTRB(15, 10, 15, 10),
-                            decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(10)),
-                            child: Text(
-                              'Start',
-                              style:
-                                  TextStyle(fontSize: 18, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                    ],
                   ),
                 ],
               ),
@@ -260,7 +285,9 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
       var slope = (_avg -
               _data.elementAt(_data.length - consideringSamplesCount).value) /
           consideringSamplesCount;
+      print("Slope ---- $slope");
       if (slope > 3) {
+        print("here");
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Finger moved away from camera!")));
         unToggle();
@@ -313,5 +340,30 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
           milliseconds:
               1000 * _windowLen ~/ _fs)); // wait for a new set of _data values
     }
+  }
+
+  void startTimer() {
+    timerSeconds = 30;
+    const oneSec = const Duration(seconds: 1);
+    _countdown = new Timer.periodic(
+      oneSec,
+      (Timer timer) {
+        if (!toggled) {
+          setState(() {
+            timer.cancel();
+          });
+        } else if (timerSeconds == 0) {
+          setState(() {
+            unToggle();
+            timer.cancel();
+          });
+        } else {
+          setState(() {
+            timerSeconds--;
+            print(timerSeconds);
+          });
+        }
+      },
+    );
   }
 }
