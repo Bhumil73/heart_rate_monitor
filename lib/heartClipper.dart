@@ -6,12 +6,21 @@ class HeartClipper extends CustomClipper<Path> {
     double width = size.width;
     double height = size.height;
     Path path = Path();
-    path.moveTo(0.5 * width, height * 0.35);
-    path.cubicTo(0.2 * width, height * 0.1, -0.25 * width, height * 0.6,
-        0.5 * width, height);
-    path.moveTo(0.5 * width, height * 0.35);
-    path.cubicTo(0.8 * width, height * 0.1, 1.25 * width, height * 0.6,
-        0.5 * width, height);
+
+    path.moveTo(width / 2, height / 5);
+
+    // Upper left path
+    path.cubicTo(5 * width / 14, 0, 0, height / 15, width / 28, 2 * height / 5);
+
+    // Lower left path
+    path.cubicTo(width / 14, 2 * height / 3, 3 * width / 7, 5 * height / 6, width / 2, height);
+
+    // Lower right path
+    path.cubicTo(4 * width / 7, 5 * height / 6, 13 * width / 14, 2 * height / 3, 27 * width / 28, 2 * height / 5);
+
+    // Upper right path
+    path.cubicTo(width, height / 15, 9 * width / 14, 0, width / 2, height / 5);
+
     return path;
   }
 
