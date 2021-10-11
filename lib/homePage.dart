@@ -108,7 +108,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
                   Container(
                     //color: Colors.orange,
                     height: MediaQuery.of(context).size.height * 0.3,
-                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).size.height * 0.3*0.15),
+                    padding: EdgeInsets.all(30),
                     child: Center(
                       child: !toggled
                           ? InkWell(
@@ -125,7 +125,6 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
                                       clipper: HeartClipper(),
                                       child: Container(
                                         color: Colors.red,
-                                        padding: EdgeInsets.only(top: 30),
                                         child: Center(
                                           child: Text(
                                             "Start",
