@@ -15,7 +15,7 @@ class HomePage extends StatefulWidget {
 class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
   bool toggled = false; // toggle button value
   List<SensorValue> _data = <SensorValue>[]; // array to store the values
-  late CameraController _controller;
+  late CameraController? _controller;
   double _alpha = 0.3; // factor for the mean value
   late AnimationController _animationController;
   double _iconScale = 1;
@@ -26,6 +26,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
   late double _avg; // store the average value during calculation
   late DateTime _now; // store the now Datetime
   late Timer _timer; // time
+  // ignore: unused_field
   late Timer _countdown;
   late List cameras; // r for image processing
 
@@ -53,6 +54,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
     Wakelock.disable();
     _animationController.stop();
     _animationController.dispose();
+    _controller!.dispose();
     super.dispose();
   }
 
@@ -100,8 +102,9 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
                         backgroundColor: Colors.grey.shade300,
                         semanticsValue: "Timer",
                         strokeWidth: 10,
-                        value: ((timerSecondsComplete-timerSeconds).toDouble() /
-                            timerSecondsComplete.toDouble()),
+                        value:
+                            ((timerSecondsComplete - timerSeconds).toDouble() /
+                                timerSecondsComplete.toDouble()),
                       ),
                     ),
                   ),
@@ -114,7 +117,6 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
                           ? InkWell(
                               onTap: () {
                                 toggle();
-                                startTimer();
                               },
                               child: Center(
                                 child: AspectRatio(
@@ -128,7 +130,8 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
                                         child: Center(
                                           child: Text(
                                             "Start",
-                                            style: TextStyle(color: Colors.white),
+                                            style:
+                                                TextStyle(color: Colors.white),
                                           ),
                                         ),
                                       ),
@@ -143,13 +146,12 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
                                 scale: toggled ? _iconScale : 0,
                                 child: ClipPath(
                                   clipper: HeartClipper(),
-                                  child: CameraPreview(_controller),
+                                  child: CameraPreview(_controller!),
                                 ),
                               ),
                             ),
                     ),
                   ),
-
                 ],
               ),
             ),
@@ -221,6 +223,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
       // after is toggled
       _initTimer();
       _updateBPM();
+      startTimer();
     });
   }
 
@@ -235,19 +238,20 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
   }
 
   void _disposeController() {
-    _controller.dispose();
-    //_controller = null;
+    _controller?.dispose();
+    _controller = null;
   }
 
   Future<void> _initController() async {
     try {
       List _cameras = await availableCameras();
-      _controller = CameraController(_cameras.first, ResolutionPreset.low);
-      await _controller.initialize();
+      _controller =
+          CameraController(_cameras.first, ResolutionPreset.ultraHigh);
+      await _controller!.initialize();
       Future.delayed(Duration(milliseconds: 100)).then((onValue) {
-        _controller.setFlashMode(FlashMode.torch);
+        _controller!.setFlashMode(FlashMode.torch);
       });
-      _controller.startImageStream((CameraImage image) {
+      _controller!.startImageStream((CameraImage image) {
         _image = image;
       });
     } catch (Exception) {
@@ -257,8 +261,8 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
 
   void _initTimer() {
     _timer = Timer.periodic(Duration(milliseconds: 1000 ~/ _fs), (timer) {
-      if (toggled && _image != null) {
-        _scanImage(_image!);
+      if (toggled) {
+        if (_image != null) _scanImage(_image!);
       } else {
         timer.cancel();
       }
