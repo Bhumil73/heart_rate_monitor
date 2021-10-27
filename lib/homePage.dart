@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:camera/camera.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:wakelock/wakelock.dart';
 import 'chart.dart';
 import 'heartClipper.dart';
+import 'result_screen.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -20,7 +22,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   double _iconScale = 1;
   int _bpm = 0; // beats per minute
-  int _fs = 30; // sampling frequency (fps)
+  int _fs = 60; // sampling frequency (fps)
   int _windowLen = 30 * 6; // window length to display - 6 seconds
   CameraImage? _image; // store the last camera image
   late double _avg; // store the average value during calculation
@@ -79,10 +81,24 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
                           "Estimated BPM",
                           style: TextStyle(fontSize: 18, color: Colors.grey),
                         ),
-                        Text(
-                          (_bpm > 15 ? _bpm.toString() : "--"),
-                          style: TextStyle(
-                              fontSize: 32, fontWeight: FontWeight.bold),
+                        GestureDetector(
+                          onTap: () {
+                            if (_bpm > 15 && !_timer.isActive)
+                              Navigator.of(context).push(CupertinoPageRoute(builder: (ctx) => ResultScreen(BpmResult: _bpm)));
+                          },
+                          child: Hero(
+                            tag: 'BPM_RESULT',
+                            child: Material(
+                              type: MaterialType.transparency,
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                child: Center(
+                                  child: Text((_bpm > 15 ? _bpm.toString() : "--"),
+                                      style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -111,7 +127,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
                   Container(
                     //color: Colors.orange,
                     height: MediaQuery.of(context).size.height * 0.3,
-                    padding: EdgeInsets.all(30),
+                    padding: EdgeInsets.all(45),
                     child: Center(
                       child: !toggled
                           ? InkWell(
@@ -359,6 +375,7 @@ class HomePageView extends State<HomePage> with SingleTickerProviderStateMixin {
           setState(() {
             unToggle();
             timer.cancel();
+            Navigator.of(context).push(CupertinoPageRoute(builder: (ctx) => ResultScreen(BpmResult: _bpm)));
           });
         } else {
           setState(() {
